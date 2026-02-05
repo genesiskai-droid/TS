@@ -9,15 +9,14 @@ const fs = require('fs');
 const ROOT_DIR = path.resolve(__dirname, '..');
 const SRC_DIR = path.resolve(ROOT_DIR, 'src');
 const DIST_DIR = path.resolve(ROOT_DIR, 'dist');
-const PRISMA_DIR = path.resolve(ROOT_DIR, '..', 'prisma');
 
 console.log('🚀 Starting production build...');
 
 // 1. Generate Prisma Client
 console.log('📦 Generating Prisma Client...');
 try {
-  execSync('prisma generate', {
-    cwd: PRISMA_DIR,
+  execSync('npx prisma generate --schema=../prisma/schema.prisma', {
+    cwd: ROOT_DIR,
     stdio: 'inherit',
   });
 } catch (error) {
@@ -99,11 +98,11 @@ if (allDiagnostics.length > 0) {
   });
 }
 
-// Copy .env file to dist if exists
-const envFile = path.resolve(ROOT_DIR, '.env');
+// Copy .env.production file to dist if exists (for production)
+const envFile = path.resolve(ROOT_DIR, '.env.production');
 if (fs.existsSync(envFile)) {
   fs.copyFileSync(envFile, path.resolve(DIST_DIR, '.env'));
-  console.log('📄 .env file copied to dist');
+  console.log('📄 .env.production file copied to dist');
 }
 
 console.log('✅ Build completed successfully!');

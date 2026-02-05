@@ -2,10 +2,12 @@
 import { Ticket, TicketStatus, UserRole, Client } from '../types';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
+const USE_MOCK = import.meta.env.VITE_USE_MOCK === 'true'; // Default to mock for demo
 
 /**
  * API Service JH&F - Conexión con Backend NestJS
  * Usa fetch para comunicarse con el backend real
+ * Si VITE_USE_MOCK=true, usa localStorage como fallback
  */
 
 // Helper para obtener headers con JWT
@@ -79,8 +81,14 @@ export const bookingsApi = {
 
 // === FALLBACK LOCALSTORAGE ===
 export const ApiService = {
-  // Obtener tickets (intenta API, cae a localStorage)
+  // Obtener tickets (usa mock/localStorage)
   getTickets: async (): Promise<Ticket[]> => {
+    if (USE_MOCK) {
+      // Fallback a localStorage
+      const data = localStorage.getItem('technova_tickets');
+      return data ? JSON.parse(data) : [];
+    }
+    // Intentar API real
     try {
       return await bookingsApi.getAll();
     } catch {

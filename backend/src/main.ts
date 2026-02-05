@@ -1,10 +1,9 @@
 import * as path from 'path';
 import * as dotenv from 'dotenv';
 
-// Load environment variables from .env file (specific to backend directory)
-// Force override to ensure only backend/.env is used
+// Load environment variables from .env file (if exists) or from process env (Render)
 dotenv.config({
-  path: path.resolve(__dirname, '../.env'),
+  path: path.resolve(__dirname, '../.env.production'),
   override: true,
 });
 
