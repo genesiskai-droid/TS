@@ -1,0 +1,8 @@
+{
+  "name": "Copia de TechNova Solutions JH&F - Gestión TI Elite",
+  "description": "Una plataforma avanzada para la gestión de servicios técnicos, preventivos y correctivos, incluyendo portal de cliente, flujo de trabajo técnico y torre de control gerencial.",
+  "requestFramePermissions": [
+    "camera",
+    "geolocation"
+  ]
+}

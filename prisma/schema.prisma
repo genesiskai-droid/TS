@@ -1,0 +1,337 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Client {
+  id             String           @id
+  type           ClientType
+  name           String
+  lastName       String?
+  email          String           @unique
+  phone          String
+  address        String
+  password       String?
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+  billingDetails BillingDetails[]
+  payments       Payment[]
+  tickets        Ticket[]
+
+  @@map("clients")
+}
+
+model TechnicalStaff {
+  id              String             @id @default(uuid())
+  dni             String             @unique
+  name            String
+  email           String             @unique
+  password        String?
+  phone           String
+  level           Int
+  seniority       Seniority
+  specialty       String
+  secondarySkills String[]
+  address         String
+  currentWorkload Int                @default(0)
+  isVersatile     Boolean            @default(false)
+  createdAt       DateTime           @default(now())
+  updatedAt       DateTime           @updatedAt
+  assignments     TicketAssignment[]
+  tickets         Ticket[]
+
+  @@map("technical_staff")
+}
+
+model Ticket {
+  id               String             @id @default(uuid())
+  type             TicketType
+  title            String
+  status           TicketStatus       @default(Registrado)
+  priority         Priority           @default(Normal)
+  clientId         String
+  date             DateTime           @default(now())
+  location         String
+  observations     String?
+  cost             Float?
+  estimatedCost    Float
+  modality         Modality
+  isSOS            Boolean            @default(false)
+  sosApproved      Boolean            @default(false)
+  createdAt        DateTime           @default(now())
+  updatedAt        DateTime           @updatedAt
+  technicalStaffId String?
+  billing          BillingDetails?
+  deviceDetails    DeviceDetail?
+  history          HistoryEntry[]
+  payments         Payment[]
+  receptionItems   ReceivedItem[]
+  technicalReport  TechnicalReport?
+  assignments      TicketAssignment[]
+  client           Client             @relation(fields: [clientId], references: [id])
+  technicalStaff   TechnicalStaff?    @relation(fields: [technicalStaffId], references: [id])
+  warranty         Warranty?
+
+  @@map("tickets")
+}
+
+model HistoryEntry {
+  id        String   @id @default(uuid())
+  status    String
+  timestamp DateTime @default(now())
+  note      String
+  ticketId  String
+  ticket    Ticket   @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+
+  @@map("history_entries")
+}
+
+model ReceivedItem {
+  id       String  @id @default(uuid())
+  type     String
+  brand    String
+  model    String
+  serial   String
+  quantity Int
+  status   String
+  notes    String?
+  ticketId String
+  ticket   Ticket  @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+
+  @@map("received_items")
+}
+
+model DeviceDetail {
+  id          String   @id @default(uuid())
+  category    String
+  device      String
+  serviceName String
+  iconName    String
+  color       String
+  subServices String[]
+  basePrice   Float
+  ticketId    String   @unique
+  ticket      Ticket   @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+
+  @@map("device_details")
+}
+
+model TechnicalReport {
+  id               String          @id @default(uuid())
+  techNotes        String
+  laborCost        Float?
+  priceAdjustment  Float?
+  adjustmentReason String?
+  timestamp        DateTime        @default(now())
+  clientResponse   ClientResponse?
+  clientNote       String?
+  ticketId         String          @unique
+  quoteItems       QuoteItem[]
+  ticket           Ticket          @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+
+  @@map("technical_reports")
+}
+
+model QuoteItem {
+  id                String          @id @default(uuid())
+  description       String
+  price             Float
+  technicalReportId String
+  technicalReport   TechnicalReport @relation(fields: [technicalReportId], references: [id], onDelete: Cascade)
+
+  @@map("quote_items")
+}
+
+model BillingDetails {
+  id         String      @id @default(uuid())
+  type       BillingType
+  documentId String
+  name       String
+  address    String
+  email      String
+  clientId   String?
+  ticketId   String?     @unique
+  client     Client?     @relation(fields: [clientId], references: [id])
+  ticket     Ticket?     @relation(fields: [ticketId], references: [id])
+
+  @@map("billing_details")
+}
+
+model Warranty {
+  id         String    @id @default(uuid())
+  months     Int
+  percentage Float
+  cost       Float
+  expiryDate DateTime?
+  ticketId   String    @unique
+  ticket     Ticket    @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+
+  @@map("warranties")
+}
+
+model Payment {
+  id        String        @id @default(uuid())
+  amount    Float
+  method    PaymentMethod
+  status    PaymentStatus @default(PENDING)
+  createdAt DateTime      @default(now())
+  clientId  String?
+  ticketId  String?
+  client    Client?       @relation(fields: [clientId], references: [id])
+  ticket    Ticket?       @relation(fields: [ticketId], references: [id])
+
+  @@map("payments")
+}
+
+model TicketAssignment {
+  id               String         @id @default(uuid())
+  assignedAt       DateTime       @default(now())
+  technicalStaffId String
+  ticketId         String
+  technicalStaff   TechnicalStaff @relation(fields: [technicalStaffId], references: [id])
+  ticket           Ticket         @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+
+  @@map("ticket_assignments")
+}
+
+model AuditLog {
+  id        String   @id @default(uuid())
+  action    String
+  entity    String
+  payload   Json?
+  ipAddress String?
+  userAgent String?
+  createdAt DateTime @default(now())
+
+  @@map("audit_logs")
+}
+
+model Notification {
+  id        String           @id @default(uuid())
+  type      NotificationType
+  title     String
+  message   String
+  data      Json?
+  isRead    Boolean          @default(false)
+  createdAt DateTime         @default(now())
+
+  @@map("notifications")
+}
+
+model AIInteraction {
+  id        String   @id @default(uuid())
+  prompt    String
+  response  String
+  model     String
+  tokens    Int?
+  metadata  Json?
+  userId    String?
+  createdAt DateTime @default(now())
+
+  @@map("ai_interactions")
+}
+
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  password  String
+  role      UserRole @default(CLIENT)
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("users")
+}
+
+enum ClientType {
+  NATURAL
+  JURIDICA
+}
+
+enum Seniority {
+  Senior
+  Semi_Senior
+  Novato
+}
+
+enum TicketType {
+  Mantenimiento
+  Incidente
+  Instalacion
+  SOS
+}
+
+enum TicketStatus {
+  Registrado
+  Asignado
+  En_Taller
+  En_Ruta
+  En_Diagnostico
+  Esperando_Aprobacion
+  En_Reparacion
+  Control_Calidad
+  Reparado
+  Pago
+  Entrega
+  Cancelado
+}
+
+enum Priority {
+  Baja
+  Normal
+  Alta
+  Critica
+}
+
+enum Modality {
+  Taller
+  Domicilio
+}
+
+enum ClientResponse {
+  approved
+  rejected
+  customer_parts
+}
+
+enum BillingType {
+  boleta
+  factura
+}
+
+enum PaymentMethod {
+  CREDIT_CARD
+  DEBIT_CARD
+  PIX
+  BOLETO
+  EFECTIVO
+  TRANSFERENCIA
+}
+
+enum PaymentStatus {
+  PENDING
+  COMPLETED
+  FAILED
+  CANCELED
+}
+
+enum NotificationType {
+  TICKET_CREATED
+  TICKET_ASSIGNED
+  TICKET_STATUS_CHANGED
+  PAYMENT_RECEIVED
+  SOS_ALERT
+  SYSTEM
+}
+
+enum UserRole {
+  ADMIN
+  MANAGER
+  CAJA
+  TECH
+  CLIENT
+}

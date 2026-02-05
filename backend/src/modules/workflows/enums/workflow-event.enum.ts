@@ -1,0 +1,9 @@
+export enum WorkflowEvent {
+  START = 'START',
+  CONFIRM = 'CONFIRM',
+  ASSIGN = 'ASSIGN',
+  START_WORK = 'START_WORK',
+  COMPLETE = 'COMPLETE',
+  CANCEL = 'CANCEL',
+  ESCALATE = 'ESCALATE',
+}
